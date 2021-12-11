@@ -1,39 +1,37 @@
-#include <iostream>       // std::cout
-#include <thread>         // std::thread
-#include <mutex>          // std::mutex, std::unique_lock
+//Ejemplo con 20 threads y mutex con lock_guard
+
+#include <thread>
+#include <mutex>
 #include <vector>
+#include <iostream>
+#include <algorithm>
 
-std::mutex mtx;           // mutex for critical section
-std::once_flag flag;
+std::mutex my_lock;
 
-void print_block (int n, char c) {
-    //unique_lock has multiple sets of constructors, where std::defer_lock does not set the lock state
-    std::unique_lock<std::mutex> my_lock (mtx, std::defer_lock);
-    //Try to lock, if the lock is successful, execute
-    //(Suitable for the scenario where a job is executed regularly, one thread can be executed, and the update timestamp can be used to assist)
-    if(my_lock.try_lock()){
-        for (int i=0; i<n; ++i)
-            std::cout << c;
-        std::cout << '\n';
-    }
+void add(int &num, int &sum){
+    while(true){
+        std::lock_guard<std::mutex> lock(my_lock);  
+        if (num < 100){ //Operating conditions
+            num += 1;
+            sum += num;
+        }   
+        else {  //Exit conditions
+            break;
+        }   
+    }   
 }
 
-void run_one(int &n){
-    std::call_once(flag, [&n]{n=n+1;}); //Only execute once, suitable for lazy loading; multi-threaded static variables
-}
-
-int main () {
-    std::vector<std::thread> ver;
+int main(){
+    int sum = 0;
     int num = 0;
-    for (auto i = 0; i < 10; ++i){
-        ver.emplace_back(print_block,50,'*');
-        ver.emplace_back(run_one, std::ref(num));
-    }
+    std::vector<std::thread> vect;   //Save the thread vector
+    for(int i = 0; i < 20; ++i){
+        std::thread t = std::thread(add, std::ref(num), std::ref(sum));
+        vect.emplace_back(std::move(t)); //Save thread
+    }   
 
-    for (auto &hilo : ver){
+    for(auto &hilo : vect){
         hilo.join();
     }
-    
-    std::cout << num << std::endl;
-    return 0;
+    std::cout << sum << std::endl;
 }
