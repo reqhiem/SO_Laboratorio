@@ -3,14 +3,14 @@
 #include <mutex>          // std::mutex, std::unique_lock
 #include <vector>
 
-std::mutex mtx;           // mutex for critical section
+std::mutex mtx;           // mutex para la sección crítica
 std::once_flag flag;
 
 void print_block (int n, char c) {
-    //unique_lock has multiple sets of constructors, where std::defer_lock does not set the lock state
+    //unique_lock tiene varios constructores, donde std::defer_lock no establece el estado de bloqueo
     std::unique_lock<std::mutex> my_lock (mtx, std::defer_lock);
-    //Try to lock, if the lock is successful, execute
-    //(Suitable for the scenario where a job is executed regularly, one thread can be executed, and the update timestamp can be used to assist)
+    //Tratar de bloquear, si el bloqueo es exitoso, ejecutar
+    //(Util para el escenario en que un trabajo se ejecuta regularmente, un hilo puede ser ejecutado, y el timestamp de actualización se puede utilizar para asistir)
     if(my_lock.try_lock()){
         for (int i=0; i<n; ++i)
             std::cout << c;
@@ -19,7 +19,7 @@ void print_block (int n, char c) {
 }
 
 void run_one(int &n){
-    std::call_once(flag, [&n]{n=n+1;}); //Only execute once, suitable for lazy loading; multi-threaded static variables
+    std::call_once(flag, [&n]{n=n+1;}); //solo ejecuta una vez, para inicializar una variable estática
 }
 
 int main () {
