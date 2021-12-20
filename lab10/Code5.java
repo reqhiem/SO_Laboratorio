@@ -24,7 +24,7 @@ public class Code5 {
 class Task implements Runnable {
     private int ID;
     private int numIter;
-    private ReentrantLock lock;
+    private static ReentrantLock lock;
     
     public Task(){
         lock = new ReentrantLock();
